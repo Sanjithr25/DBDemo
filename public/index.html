@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlavorFlow | Hybrid Intent Search</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="glass-bg"></div>
+    
+    <div class="container">
+        <header>
+            <h1>Flavor<span>Flow</span></h1>
+            <p class="subtitle">Intent-Based Hybrid Recipe Search</p>
+        </header>
+
+        <div class="search-box-container">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Try 'quick high calorie snacks' or 'light meal for dinner'...">
+                <button id="searchBtn">Find Recipes</button>
+            </div>
+            <div class="examples">
+                <span>Try:</span>
+                <button onclick="setQuery('quick high calorie snacks')">Quick High-Cal Snacks</button>
+                <button onclick="setQuery('comfort food for evening')">Evening Comfort</button>
+                <button onclick="setQuery('high protein breakfast')">Protein Breakfast</button>
+            </div>
+        </div>
+
+        <div id="queryLogic" class="logic-display hidden">
+            <div class="logic-item">
+                <span class="label">Semantic Intent (Milvus):</span>
+                <span id="semanticVal" class="val"></span>
+            </div>
+            <div class="logic-item">
+                <span class="label">SQL Filters (Postgres):</span>
+                <span id="filtersVal" class="val"></span>
+            </div>
+        </div>
+
+        <div id="results" class="results-grid">
+            <!-- Results will appear here -->
+        </div>
+
+        <div id="loader" class="loader hidden">
+            <div class="spinner"></div>
+            <p>Processing Hybrid Search...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

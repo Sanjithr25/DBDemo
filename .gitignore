@@ -1,28 +1,29 @@
-# Node.js
+# Node
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .npm
 
-# Transformers.js / Hugging Face cache
-# Usually Transformers.js saves models to a .cache folder unless configured otherwise
+# Transformers.js / Hugging Face model cache
 .cache/
 
-# Environment variables
+# Environment variables (Sensitive - DO NOT REMOVE)
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# OS related files
+# OS related
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # VS Code
 .vscode/
 *.code-workspace
 
-# Local database/Postgres temporary files (if any)
+# Local database residuals (if any)
+volumes/
 *.log
