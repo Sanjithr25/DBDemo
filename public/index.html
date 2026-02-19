@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FlavorFlow | Hybrid Intent Search</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
 <body>
     <div class="glass-bg"></div>
-    
+
     <div class="container">
         <header>
             <h1>Flavor<span>Flow</span></h1>
@@ -20,11 +22,13 @@
         <div class="search-box-container">
             <div class="search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Try 'quick high calorie snacks' or 'light meal for dinner'...">
+                <input type="text" id="searchInput"
+                    placeholder="Try 'quick high calorie snacks' or 'light meal for dinner'...">
                 <button id="searchBtn">Find Recipes</button>
             </div>
             <div class="examples">
                 <span>Try:</span>
+                <button onclick="setQuery('filling but low quantity recipes')">Filling but Low Quantity</button>
                 <button onclick="setQuery('quick high calorie snacks')">Quick High-Cal Snacks</button>
                 <button onclick="setQuery('comfort food for evening')">Evening Comfort</button>
                 <button onclick="setQuery('high protein breakfast')">Protein Breakfast</button>
@@ -47,11 +51,59 @@
         </div>
 
         <div id="loader" class="loader hidden">
-            <div class="spinner"></div>
-            <p>Processing Hybrid Search...</p>
+            <p class="loader-title">Implementing Hybrid Search&hellip;</p>
+            <div class="pipeline">
+                <!-- Step 1 -->
+                <div class="pipeline-step" id="step-intent">
+                    <div class="step-icon">
+                        <i class="fas fa-brain"></i>
+                        <div class="step-ring"></div>
+                    </div>
+                    <div class="step-label">Parsing Query Intent</div>
+                    <div class="step-sub">Extracting keywords &amp; filters</div>
+                    <div class="step-status"></div>
+                </div>
+
+                <div class="pipeline-connector" id="conn-1">
+                    <div class="connector-line">
+                        <div class="connector-dot"></div>
+                    </div>
+                    <div class="connector-label">embedding →</div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="pipeline-step" id="step-milvus">
+                    <div class="step-icon">
+                        <i class="fas fa-database"></i>
+                        <div class="step-ring"></div>
+                    </div>
+                    <div class="step-label">Searching Vector DB</div>
+                    <div class="step-sub">Querying Zilliz Cloud</div>
+                    <div class="step-status"></div>
+                </div>
+
+                <div class="pipeline-connector" id="conn-2">
+                    <div class="connector-line">
+                        <div class="connector-dot"></div>
+                    </div>
+                    <div class="connector-label">IDs → SQL →</div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="pipeline-step" id="step-postgres">
+                    <div class="step-icon">
+                        <i class="fas fa-filter"></i>
+                        <div class="step-ring"></div>
+                    </div>
+                    <div class="step-label">Filtering with Postgres</div>
+                    <div class="step-sub">Applying structured filters</div>
+                    <div class="step-status"></div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="script.js"></script>
 </body>
+
 </html>
