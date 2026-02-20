@@ -20,15 +20,21 @@
 
     <div class="app">
 
+        <!-- Sidebar overlay (mobile tap-to-close) -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
                     <i class="fas fa-brain"></i>
                     <span>Mee<strong>Mem</strong></span>
                 </div>
-                <p class="sidebar-sub">Meeting Memory Assistant</p>
+                <button class="sidebar-close" onclick="closeSidebar()" title="Close menu">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
+            <p class="sidebar-sub">Meeting Memory Assistant</p>
 
             <nav class="sidebar-nav">
                 <p class="nav-label">Try asking</p>
@@ -65,9 +71,14 @@
 
             <!-- Top bar -->
             <header class="topbar">
-                <div class="topbar-title">
-                    <h1>Your <span>Meeting Memory</span></h1>
-                    <p>Ask anything — MeeMem searches all your MoMs and answers instantly</p>
+                <div class="topbar-left">
+                    <button class="hamburger" id="hamburger" onclick="openSidebar()" title="Open menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="topbar-title">
+                        <h1>Your <span>Meeting Memory</span></h1>
+                        <p>Ask anything — MeeMem searches all your MoMs and answers instantly</p>
+                    </div>
                 </div>
                 <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" onclick="toggleTheme()">
                     <i class="fas fa-moon" id="themeIcon"></i>

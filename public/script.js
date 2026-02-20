@@ -48,11 +48,39 @@ const PS = {
     generate: document.getElementById('ps-generate'),
 };
 
+// ─── Mobile sidebar ─────────────────────────────────────────────────────────
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+const hamburgerBtn = document.getElementById('hamburger');
+
+function openSidebar() {
+    sidebar.classList.add('open');
+    sidebarOverlay.classList.add('open');
+    hamburgerBtn.classList.add('open');
+    hamburgerBtn.querySelector('i').className = 'fas fa-times';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+    sidebar.classList.remove('open');
+    sidebarOverlay.classList.remove('open');
+    hamburgerBtn.classList.remove('open');
+    hamburgerBtn.querySelector('i').className = 'fas fa-bars';
+    document.body.style.overflow = '';
+}
+
+// Close on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSidebar();
+});
+
 // ─── Auto-resize textarea ───────────────────────────────────────────────────
 queryInput.addEventListener('input', () => {
     queryInput.style.height = 'auto';
     queryInput.style.height = Math.min(queryInput.scrollHeight, 150) + 'px';
 });
+
 
 // ─── Enter to send, Shift+Enter for newline ─────────────────────────────────
 queryInput.addEventListener('keydown', (e) => {
@@ -194,6 +222,7 @@ function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ─── Suggestion helper ───────────────────────────────────────────────────────
 function setQuery(text) {
+    closeSidebar(); // no-op on desktop, closes drawer on mobile
     queryInput.value = text;
     queryInput.style.height = 'auto';
     queryInput.style.height = Math.min(queryInput.scrollHeight, 150) + 'px';
