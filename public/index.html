@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Knowledge Assistant — MOM Query System</title>
+    <title>MeeMem — Meeting Memory Assistant</title>
     <meta name="description"
-        content="Ask questions about your session notes and meeting minutes. Powered by RAG with Zilliz vector search and Gemini AI.">
+        content="Ask questions about your session notes and meeting minutes. Powered by RAG with Zilliz vector search and Groq AI.">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -16,7 +16,6 @@
     <div class="bg-orbs">
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
     </div>
 
     <div class="app">
@@ -26,31 +25,26 @@
             <div class="sidebar-header">
                 <div class="logo">
                     <i class="fas fa-brain"></i>
-                    <span>MOM<strong>AI</strong></span>
+                    <span>Mee<strong>Mem</strong></span>
                 </div>
-                <p class="sidebar-sub">Personal Knowledge Assistant</p>
+                <p class="sidebar-sub">Meeting Memory Assistant</p>
             </div>
 
             <nav class="sidebar-nav">
-                <p class="nav-label">Suggested Queries</p>
-                <button class="suggestion-btn" onclick="setQuery('What are the 3 pillars of communication?')">
-                    <i class="fas fa-lightbulb"></i>3 Pillars of Communication
+                <p class="nav-label">Try asking</p>
+                <button class="suggestion-btn" onclick="setQuery('Key rules to follow in email communication')">
+                    <i class="fas fa-envelope"></i>Email Communication Rules
                 </button>
-                <button class="suggestion-btn" onclick="setQuery('What are the email etiquette rules?')">
-                    <i class="fas fa-envelope"></i>Email Etiquette Rules
+                <button class="suggestion-btn" onclick="setQuery('Core concepts discussed during database session')">
+                    <i class="fas fa-database"></i>Database Session Concepts
                 </button>
-                <button class="suggestion-btn" onclick="setQuery('What were the key decisions made?')">
-                    <i class="fas fa-check-circle"></i>Key Decisions Made
-                </button>
-                <button class="suggestion-btn" onclick="setQuery('Who attended the meetings?')">
-                    <i class="fas fa-users"></i>Meeting Attendees
-                </button>
-                <button class="suggestion-btn" onclick="setQuery('What action items were assigned?')">
-                    <i class="fas fa-tasks"></i>Action Items
+                <button class="suggestion-btn" onclick="setQuery('Implementation steps for github actions CI/CD')">
+                    <i class="fas fa-code-branch"></i>GitHub Actions CI/CD
                 </button>
             </nav>
 
             <div class="sidebar-info">
+                <p class="nav-label">Powered by</p>
                 <div class="info-pill">
                     <i class="fas fa-database"></i>
                     <span>Zilliz Vector DB</span>
@@ -72,17 +66,20 @@
             <!-- Top bar -->
             <header class="topbar">
                 <div class="topbar-title">
-                    <h1>Ask your <span>Meeting Notes</span></h1>
-                    <p>Query across all your MOMs using AI-powered retrieval</p>
+                    <h1>Your <span>Meeting Memory</span></h1>
+                    <p>Ask anything — MeeMem searches all your MoMs and answers instantly</p>
                 </div>
+                <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" onclick="toggleTheme()">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
             </header>
 
             <!-- Answer panel -->
             <section class="answer-panel" id="answerPanel">
                 <div class="empty-state" id="emptyState">
                     <div class="empty-icon"><i class="fas fa-comments"></i></div>
-                    <h2>Ask anything about your meetings</h2>
-                    <p>Type a question below or choose a suggestion from the sidebar to get started.</p>
+                    <h2>What do you want to remember?</h2>
+                    <p>Type a question below or pick a suggestion from the sidebar to get started.</p>
                 </div>
 
                 <!-- Loading state -->
@@ -118,7 +115,7 @@
                             </div>
                             <div class="ps-text">
                                 <span class="ps-label">Generating Answer</span>
-                                <span class="ps-sub">Gemini AI</span>
+                                <span class="ps-sub" id="generateSub">Groq / LLaMA 3.3</span>
                             </div>
                         </div>
                     </div>

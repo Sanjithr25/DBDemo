@@ -10,6 +10,35 @@ const answerBody = document.getElementById('answerBody');
 const sourcesList = document.getElementById('sourcesList');
 const sourceCount = document.getElementById('sourceCount');
 
+// ─── Dark / Light mode ───────────────────────────────────────────────────────
+(function initTheme() {
+    const saved = localStorage.getItem('meemem-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = saved || (prefersDark ? 'dark' : 'light');
+    applyTheme(theme);
+})();
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const icon = document.getElementById('themeIcon');
+    const btn = document.getElementById('themeToggle');
+    if (!icon) return;
+    if (theme === 'dark') {
+        icon.className = 'fas fa-sun';
+        btn.title = 'Switch to light mode';
+    } else {
+        icon.className = 'fas fa-moon';
+        btn.title = 'Switch to dark mode';
+    }
+    localStorage.setItem('meemem-theme', theme);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+
 // Pipeline elements
 const PS = {
     embed: document.getElementById('ps-embed'),
