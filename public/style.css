@@ -157,6 +157,8 @@ body {
     z-index: 1;
     display: flex;
     height: 100vh;
+    height: 100dvh;
+    /* Modern Safari/Mobile fix */
     overflow: hidden;
 }
 
@@ -171,6 +173,13 @@ body {
     padding: 1.6rem 1.2rem;
     gap: 1.8rem;
     overflow-y: auto;
+}
+
+.sidebar-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    /* Small gap between logo and description */
 }
 
 .sidebar-header {
@@ -203,7 +212,7 @@ body {
     font-size: 0.75rem;
     color: var(--text-muted);
     font-weight: 500;
-    padding-left: 2rem;
+    padding-left: 1.9rem;
 }
 
 /* ─── Nav ──────────────────────────────────────────────────────────────────── */
@@ -1095,7 +1104,7 @@ body {
 
     /* Query footer */
     .query-footer {
-        padding: 0.75rem 1rem 0.9rem;
+        padding: 0.75rem 1rem calc(1.4rem + env(safe-area-inset-bottom));
     }
 
     .query-hint {
