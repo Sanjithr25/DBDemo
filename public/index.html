@@ -4,103 +4,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlavorFlow | Hybrid Intent Search</title>
+    <title>Knowledge Assistant — MOM Query System</title>
+    <meta name="description"
+        content="Ask questions about your session notes and meeting minutes. Powered by RAG with Zilliz vector search and Gemini AI.">
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
-    <div class="glass-bg"></div>
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
 
-    <div class="container">
-        <header>
-            <h1>Flavor<span>Flow</span></h1>
-            <p class="subtitle">Intent-Based Hybrid Recipe Search</p>
-        </header>
+    <div class="app">
 
-        <div class="search-box-container">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput"
-                    placeholder="Try 'quick high calorie snacks' or 'light meal for dinner'...">
-                <button id="searchBtn">Find Recipes</button>
-            </div>
-            <div class="examples">
-                <span>Try:</span>
-                <button onclick="setQuery('filling but low quantity recipes')">Filling but Low Quantity</button>
-                <button onclick="setQuery('quick high calorie snacks')">Quick High-Cal Snacks</button>
-                <button onclick="setQuery('comfort food for evening')">Evening Comfort</button>
-                <button onclick="setQuery('high protein breakfast')">Protein Breakfast</button>
-            </div>
-        </div>
-
-        <div id="queryLogic" class="logic-display hidden">
-            <div class="logic-item">
-                <span class="label">Semantic Intent (Milvus):</span>
-                <span id="semanticVal" class="val"></span>
-            </div>
-            <div class="logic-item">
-                <span class="label">SQL Filters (Postgres):</span>
-                <span id="filtersVal" class="val"></span>
-            </div>
-        </div>
-
-        <div id="results" class="results-grid">
-            <!-- Results will appear here -->
-        </div>
-
-        <div id="loader" class="loader hidden">
-            <p class="loader-title">Implementing Hybrid Search&hellip;</p>
-            <div class="pipeline">
-                <!-- Step 1 -->
-                <div class="pipeline-step" id="step-intent">
-                    <div class="step-icon">
-                        <i class="fas fa-brain"></i>
-                        <div class="step-ring"></div>
-                    </div>
-                    <div class="step-label">Parsing Query Intent</div>
-                    <div class="step-sub">Extracting keywords &amp; filters</div>
-                    <div class="step-status"></div>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-brain"></i>
+                    <span>MOM<strong>AI</strong></span>
                 </div>
+                <p class="sidebar-sub">Personal Knowledge Assistant</p>
+            </div>
 
-                <div class="pipeline-connector" id="conn-1">
-                    <div class="connector-line">
-                        <div class="connector-dot"></div>
-                    </div>
-                    <div class="connector-label">embedding →</div>
+            <nav class="sidebar-nav">
+                <p class="nav-label">Suggested Queries</p>
+                <button class="suggestion-btn" onclick="setQuery('What are the 3 pillars of communication?')">
+                    <i class="fas fa-lightbulb"></i>3 Pillars of Communication
+                </button>
+                <button class="suggestion-btn" onclick="setQuery('What are the email etiquette rules?')">
+                    <i class="fas fa-envelope"></i>Email Etiquette Rules
+                </button>
+                <button class="suggestion-btn" onclick="setQuery('What were the key decisions made?')">
+                    <i class="fas fa-check-circle"></i>Key Decisions Made
+                </button>
+                <button class="suggestion-btn" onclick="setQuery('Who attended the meetings?')">
+                    <i class="fas fa-users"></i>Meeting Attendees
+                </button>
+                <button class="suggestion-btn" onclick="setQuery('What action items were assigned?')">
+                    <i class="fas fa-tasks"></i>Action Items
+                </button>
+            </nav>
+
+            <div class="sidebar-info">
+                <div class="info-pill">
+                    <i class="fas fa-database"></i>
+                    <span>Zilliz Vector DB</span>
                 </div>
-
-                <!-- Step 2 -->
-                <div class="pipeline-step" id="step-milvus">
-                    <div class="step-icon">
-                        <i class="fas fa-database"></i>
-                        <div class="step-ring"></div>
-                    </div>
-                    <div class="step-label">Searching Vector DB</div>
-                    <div class="step-sub">Querying Zilliz Cloud</div>
-                    <div class="step-status"></div>
+                <div class="info-pill">
+                    <i class="fas fa-table"></i>
+                    <span>Supabase Metadata</span>
                 </div>
-
-                <div class="pipeline-connector" id="conn-2">
-                    <div class="connector-line">
-                        <div class="connector-dot"></div>
-                    </div>
-                    <div class="connector-label">IDs → SQL →</div>
-                </div>
-
-                <!-- Step 3 -->
-                <div class="pipeline-step" id="step-postgres">
-                    <div class="step-icon">
-                        <i class="fas fa-filter"></i>
-                        <div class="step-ring"></div>
-                    </div>
-                    <div class="step-label">Filtering with Postgres</div>
-                    <div class="step-sub">Applying structured filters</div>
-                    <div class="step-status"></div>
+                <div class="info-pill">
+                    <i class="fas fa-robot"></i>
+                    <span>Groq / LLaMA 3.3</span>
                 </div>
             </div>
-        </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="main">
+
+            <!-- Top bar -->
+            <header class="topbar">
+                <div class="topbar-title">
+                    <h1>Ask your <span>Meeting Notes</span></h1>
+                    <p>Query across all your MOMs using AI-powered retrieval</p>
+                </div>
+            </header>
+
+            <!-- Answer panel -->
+            <section class="answer-panel" id="answerPanel">
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon"><i class="fas fa-comments"></i></div>
+                    <h2>Ask anything about your meetings</h2>
+                    <p>Type a question below or choose a suggestion from the sidebar to get started.</p>
+                </div>
+
+                <!-- Loading state -->
+                <div class="loading-state hidden" id="loadingState">
+                    <div class="rag-pipeline">
+                        <div class="pipeline-step" id="ps-embed">
+                            <div class="ps-icon"><i class="fas fa-vector-square"></i>
+                                <div class="ps-ring"></div>
+                            </div>
+                            <div class="ps-text">
+                                <span class="ps-label">Embedding Query</span>
+                                <span class="ps-sub">all-MiniLM-L6-v2</span>
+                            </div>
+                        </div>
+                        <div class="pipeline-arrow" id="pa-1">
+                            <div class="arrow-fill"></div>
+                        </div>
+                        <div class="pipeline-step" id="ps-retrieve">
+                            <div class="ps-icon"><i class="fas fa-search"></i>
+                                <div class="ps-ring"></div>
+                            </div>
+                            <div class="ps-text">
+                                <span class="ps-label">Vector Search</span>
+                                <span class="ps-sub">Zilliz Cloud</span>
+                            </div>
+                        </div>
+                        <div class="pipeline-arrow" id="pa-2">
+                            <div class="arrow-fill"></div>
+                        </div>
+                        <div class="pipeline-step" id="ps-generate">
+                            <div class="ps-icon"><i class="fas fa-robot"></i>
+                                <div class="ps-ring"></div>
+                            </div>
+                            <div class="ps-text">
+                                <span class="ps-label">Generating Answer</span>
+                                <span class="ps-sub">Gemini AI</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result -->
+                <div class="result-state hidden" id="resultState">
+                    <div class="result-query-label">
+                        <i class="fas fa-quote-left"></i>
+                        <span id="resultQuery"></span>
+                    </div>
+
+                    <div class="answer-card">
+                        <div class="answer-header">
+                            <i class="fas fa-robot"></i>
+                            <span>Answer</span>
+                        </div>
+                        <div class="answer-body" id="answerBody"></div>
+                    </div>
+
+                    <div class="sources-section" id="sourcesSection">
+                        <div class="sources-header">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Sources Retrieved</span>
+                            <span class="source-count" id="sourceCount"></span>
+                        </div>
+                        <div class="sources-list" id="sourcesList"></div>
+                    </div>
+                </div>
+
+                <!-- Error -->
+                <div class="error-state hidden" id="errorState">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Something went wrong</h3>
+                    <p id="errorMsg"></p>
+                </div>
+            </section>
+
+            <!-- Query Input -->
+            <footer class="query-footer">
+                <div class="query-box" id="queryBox">
+                    <textarea id="queryInput" placeholder="Ask a question about your meeting notes…" rows="1"
+                        maxlength="500"></textarea>
+                    <button id="sendBtn" onclick="submitQuery()" title="Send">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <p class="query-hint">Press <kbd>Enter</kbd> to send &nbsp;·&nbsp; <kbd>Shift+Enter</kbd> for new line
+                </p>
+            </footer>
+
+        </main>
     </div>
 
     <script src="script.js"></script>

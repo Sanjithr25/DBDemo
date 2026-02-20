@@ -1,5 +1,15 @@
 {
+  "name": "personal-knowledge-assistant",
+  "version": "1.0.0",
+  "description": "RAG-based Personal Knowledge Assistant using Supabase, Zilliz Cloud, and local embeddings",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "ingest": "node ingest.js"
+  },
   "dependencies": {
+    "@supabase/supabase-js": "^2.97.0",
     "@xenova/transformers": "^2.17.2",
     "@zilliz/milvus2-sdk-node": "^2.6.10",
     "cors": "^2.8.6",
@@ -7,23 +17,17 @@
     "express": "^5.2.1",
     "pg": "^8.18.0"
   },
-  "name": "dbdemo",
-  "version": "1.0.0",
-  "description": "",
-  "main": "download_model.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Sanjithr25/DBDemo.git"
   },
-  "keywords": [],
+  "keywords": [
+    "rag",
+    "vector-db",
+    "milvus",
+    "supabase",
+    "knowledge-assistant"
+  ],
   "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/Sanjithr25/DBDemo/issues"
-  },
-  "homepage": "https://github.com/Sanjithr25/DBDemo#readme"
+  "license": "ISC"
 }

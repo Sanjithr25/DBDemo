@@ -27,3 +27,7 @@ desktop.ini
 # Local database residuals (if any)
 volumes/
 *.log
+
+# MOM documents — keep the folder, ignore the content
+moms/*.txt
+moms/*.md

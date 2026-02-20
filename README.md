@@ -1,70 +1,145 @@
-# Intent-Based Recipe Search (Hybrid: PostgreSQL + Milvus)
+# Personal Knowledge Assistant (RAG System)
 
-A high-performance recipe search engine that combines **Semantic Understanding** (Milvus) with **Structured Filtering** (PostgreSQL).
+A backend-only RAG (Retrieval-Augmented Generation) system built with:
 
-## 🚀 How it Works
-This project implements a **Hybrid Search** pattern:
+- **Node.js / Express** — API server  
+- **Supabase (PostgreSQL)** — document metadata storage  
+- **Zilliz Cloud (Milvus)** — vector search  
+- **@xenova/transformers** — local embeddings (`Xenova/all-MiniLM-L6-v2`, dim=384)  
+- **OpenAI gpt-3.5-turbo** — answer generation (optional; falls back to a placeholder)
 
-1.  **Semantic Search (Milvus)**: Understands the *intent* and *context* of a query (e.g., "comfort food" or "busy mornings") using vector embeddings.
-2.  **Structured Filtering (PostgreSQL)**: Handles hard constraints like "calories < 300" or "prep_time < 15" using standard SQL.
-3.  **Local Embeddings**: Uses `Xenova/all-MiniLM-L6-v2` to generate 384-dimensional vectors locally without external APIs.
+---
 
-## 🛠 Tech Stack
-- **Frontend**: Vanilla HTML5/CSS3 + JavaScript
-- **Backend**: Node.js (Express)
-- **Vector DB**: Milvus (Attu for GUI)
-- **RDBMS**: PostgreSQL
-- **Embeddings**: Transformers.js (Local)
+## Project Structure
 
-## 📋 Prerequisites
-- **PostgreSQL**: Installed and running on port 5432.
-- **Milvus**: Installed (usually via Docker) and running on port 19530.
-- **Node.js**: v18+ installed.
-
-## ⚙️ Setup Instructions
-
-### 1. Database Setup
-Run the following to initialize your PostgreSQL table:
-```bash
-psql -U postgres -f setup_db.sql
+```
+/db
+  supabase.js        Supabase client
+  migration.sql      CREATE TABLE statement (run in Supabase SQL Editor)
+/vector
+  zilliz.js          Zilliz Cloud / Milvus client + collection management
+/embeddings
+  embed.js           embedText(text) → number[384]
+/rag
+  retrieve.js        retrieveChunks(query) + buildContext()
+  generate.js        generateAnswer(query, context)
+/routes
+  query.js           POST /query route handler
+server.js            Express entry point
+ingest.js            One-shot ingestion script
 ```
 
-### 2. Environment Configuration
-Update the `.env` file with your PostgreSQL password:
+---
+
+## Setup
+
+### 1. Environment variables
+
+Copy `.env` and fill in your values:
+
 ```env
-PG_PASSWORD=your_actual_password
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_KEY=<anon or service-role key>
+
+ZILLIZ_ENDPOINT=https://<cluster>.cloud.zilliz.com
+ZILLIZ_API_KEY=<api-key>
+
+OPENAI_API_KEY=           # optional; leave blank to use placeholder fallback
+PORT=3000
 ```
 
-### 3. Populate Data
-Run the sync script to generate embeddings and populate Milvus:
+### 2. Create the Supabase table
+
+Run `db/migration.sql` in the [Supabase SQL Editor](https://supabase.com/dashboard):
+
+```sql
+CREATE TABLE IF NOT EXISTS documents (
+  id      SERIAL PRIMARY KEY,
+  title   TEXT NOT NULL,
+  date    DATE,
+  topic   TEXT,
+  tags    TEXT[],
+  content TEXT NOT NULL
+);
+```
+
+### 3. Install dependencies
+
 ```bash
-node sync.js
+npm install
 ```
 
-### 4. Start the Server
+### 4. Ingest sample documents
+
+```bash
+npm run ingest
+```
+
+This will:
+1. Ensure the Zilliz `document_chunks` collection exists  
+2. Insert 3 sample MOM documents into Supabase  
+3. Split each document into chunks, embed them, and upload to Zilliz  
+
+### 5. Start the server
+
 ```bash
 npm start
 ```
 
-## 🔍 Query Logic
-The system automatically extracts rules based on keywords:
+---
 
-| Keyword | Rule Applied |
-| :--- | :--- |
-| **high calorie** | `calories > 500` |
-| **low calorie** | `calories < 300` |
-| **quick** | `prep_time < 15` |
-| **snack** | `category @> ARRAY['snack']` |
-| **breakfast** | `category @> ARRAY['breakfast']` |
-| **dinner** | `category @> ARRAY['dinner']` |
+## API
 
-**Example**: *"quick high calorie snacks"*
-- **Milvus Query**: "quick snacks" (Semantic retrieval)
-- **Postgres Filter**: `calories > 500 AND prep_time < 15 AND category @> ARRAY['snack']`
+### `POST /query`
 
-## 📂 Project Structure
-- `setup_db.sql`: Schema and intent-rich dataset.
-- `sync.js`: Script to generate embeddings and sync Postgres IDs to Milvus.
-- `server.js`: Express API for hybrid search.
-- `public/`: Stunning frontend dashboard.
-- `download_model.js`: Utility to pre-download the model.
+**Request**
+```json
+{ "query": "What did we discuss about Milvus?" }
+```
+
+**Response**
+```json
+{
+  "answer": "The team selected Milvus via Zilliz Cloud as the primary vector store...",
+  "sources": [
+    { "document_id": 1, "text": "...", "score": 0.91 },
+    { "document_id": 2, "text": "...", "score": 0.78 }
+  ]
+}
+```
+
+### `GET /health`
+
+Returns `{ "status": "ok" }`.
+
+---
+
+## How It Works
+
+```
+User query
+    │
+    ▼
+embedText(query)          ← local model, no API call
+    │
+    ▼
+Zilliz ANN search         ← top-5 chunks by COSINE similarity
+    │
+    ▼
+buildContext(chunks)      ← concatenate, cap at ~1500 tokens
+    │
+    ▼
+generateAnswer(query, ctx) ← OpenAI gpt-3.5-turbo (or placeholder)
+    │
+    ▼
+{ answer, sources }
+```
+
+---
+
+## Constraints / Non-Goals
+
+- No LangChain
+- No authentication
+- No chat history / streaming
+- No multi-agent systems

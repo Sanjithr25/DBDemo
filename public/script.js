@@ -1,179 +1,172 @@
-const searchInput = document.getElementById('searchInput');
-const searchBtn = document.getElementById('searchBtn');
-const resultsDiv = document.getElementById('results');
-const loader = document.getElementById('loader');
-const queryLogic = document.getElementById('queryLogic');
-const semanticVal = document.getElementById('semanticVal');
-const filtersVal = document.getElementById('filtersVal');
+// ─── DOM refs ──────────────────────────────────────────────────────────────
+const queryInput = document.getElementById('queryInput');
+const sendBtn = document.getElementById('sendBtn');
+const emptyState = document.getElementById('emptyState');
+const loadingState = document.getElementById('loadingState');
+const resultState = document.getElementById('resultState');
+const errorState = document.getElementById('errorState');
+const resultQuery = document.getElementById('resultQuery');
+const answerBody = document.getElementById('answerBody');
+const sourcesList = document.getElementById('sourcesList');
+const sourceCount = document.getElementById('sourceCount');
 
-// ─── Pipeline Step Elements ──────────────────────────────────────────────────
-const steps = {
-    intent: document.getElementById('step-intent'),
-    conn1: document.getElementById('conn-1'),
-    milvus: document.getElementById('step-milvus'),
-    conn2: document.getElementById('conn-2'),
-    postgres: document.getElementById('step-postgres'),
+// Pipeline elements
+const PS = {
+    embed: document.getElementById('ps-embed'),
+    arr1: document.getElementById('pa-1'),
+    retrieve: document.getElementById('ps-retrieve'),
+    arr2: document.getElementById('pa-2'),
+    generate: document.getElementById('ps-generate'),
 };
 
-// ─── Pipeline Animation Helpers ──────────────────────────────────────────────
+// ─── Auto-resize textarea ───────────────────────────────────────────────────
+queryInput.addEventListener('input', () => {
+    queryInput.style.height = 'auto';
+    queryInput.style.height = Math.min(queryInput.scrollHeight, 150) + 'px';
+});
+
+// ─── Enter to send, Shift+Enter for newline ─────────────────────────────────
+queryInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        submitQuery();
+    }
+});
+
+// ─── Pipeline animation ─────────────────────────────────────────────────────
 function resetPipeline() {
-    Object.values(steps).forEach(el => {
-        el.classList.remove('active', 'done');
-    });
+    Object.values(PS).forEach(el => el.classList.remove('active', 'done'));
 }
 
-function activateStep(id) {
-    steps[id].classList.add('active');
-}
+function activate(id) { PS[id].classList.add('active'); }
+function complete(id) { PS[id].classList.remove('active'); PS[id].classList.add('done'); }
 
-function completeStep(id) {
-    steps[id].classList.remove('active');
-    steps[id].classList.add('done');
-}
+let pipelineTimers = [];
 
-// Run the pipeline animation while awaiting the fetch.
-// Returns a cleanup function that finalises all steps on response.
-function runPipelineAnimation() {
+function runPipeline() {
     resetPipeline();
+    pipelineTimers.forEach(clearTimeout);
+    pipelineTimers = [];
 
-    // Step 1 — Parsing intent (instant, ~0 ms)
-    activateStep('intent');
+    // Step 1 — Embedding
+    activate('embed');
+    pipelineTimers.push(setTimeout(() => { complete('embed'); activate('arr1'); }, 1200));
+    pipelineTimers.push(setTimeout(() => { complete('arr1'); activate('retrieve'); }, 1800));
 
-    // Step 1 — hold "Parsing Intent" visibly for ~1 s
-    const t1 = setTimeout(() => {
-        completeStep('intent');
-        activateStep('conn1');
-    }, 1000);
+    // Step 2 — Retrieval (takes longest — embedding + Zilliz search)
+    pipelineTimers.push(setTimeout(() => { complete('retrieve'); activate('arr2'); }, 3600));
+    pipelineTimers.push(setTimeout(() => { complete('arr2'); activate('generate'); }, 4200));
 
-    // Connector 1 flows for ~600 ms before Zilliz lights up
-    const t2 = setTimeout(() => {
-        completeStep('conn1');
-        activateStep('milvus');
-    }, 1600);
-
-    // Step 2 — Zilliz stays active for ~1.8 s (embedding + ANN search)
-    const t3 = setTimeout(() => {
-        completeStep('milvus');
-        activateStep('conn2');
-    }, 3400);
-
-    // Connector 2 flows for ~600 ms before Postgres lights up
-    const t4 = setTimeout(() => {
-        completeStep('conn2');
-        activateStep('postgres');
-    }, 4000);
-
-    // Return a "finish" function: marks remaining steps as done immediately
-    return function finish() {
-        clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
-        // Mark everything done so the pipeline looks complete before hiding
-        ['intent', 'conn1', 'milvus', 'conn2', 'postgres'].forEach(id => {
-            steps[id].classList.remove('active');
-            steps[id].classList.add('done');
-        });
+    return function finishPipeline() {
+        pipelineTimers.forEach(clearTimeout);
+        Object.values(PS).forEach(el => { el.classList.remove('active'); el.classList.add('done'); });
     };
 }
 
-// ─── Search ──────────────────────────────────────────────────────────────────
-async function performSearch() {
-    const query = searchInput.value.trim();
+// ─── Show / Hide panels ─────────────────────────────────────────────────────
+function showOnly(id) {
+    [emptyState, loadingState, resultState, errorState].forEach(el => el.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+}
+
+// ─── Score badge ─────────────────────────────────────────────────────────────
+function scoreBadge(score) {
+    const pct = Math.round(score * 100);
+    const cls = score >= 0.65 ? 'score-high' : score >= 0.4 ? 'score-mid' : 'score-low';
+    return `<span class="source-score ${cls}">${pct}%</span>`;
+}
+
+// ─── Render result ──────────────────────────────────────────────────────────
+function renderResult(query, data) {
+    resultQuery.textContent = query;
+    answerBody.textContent = data.answer || 'No answer returned.';
+
+    sourcesList.innerHTML = '';
+    const sources = data.sources || [];
+    sourceCount.textContent = `${sources.length} chunk${sources.length !== 1 ? 's' : ''}`;
+
+    sources.forEach((s, i) => {
+        const item = document.createElement('div');
+        item.className = 'source-item';
+        item.innerHTML = `
+      ${scoreBadge(s.score)}
+      <div class="source-content">
+        <div class="source-doc-id">Document ID: ${s.document_id} &nbsp;·&nbsp; Chunk ${i + 1}</div>
+        <div class="source-text">${escHtml(s.text)}</div>
+      </div>
+    `;
+        sourcesList.appendChild(item);
+    });
+
+    showOnly('resultState');
+}
+
+function escHtml(str) {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+// ─── Main submit ────────────────────────────────────────────────────────────
+async function submitQuery() {
+    const query = queryInput.value.trim();
     if (!query) return;
 
-    // UI Reset
-    resultsDiv.innerHTML = '';
-    queryLogic.classList.add('hidden');
-    loader.classList.remove('hidden');
+    sendBtn.disabled = true;
+    showOnly('loadingState');
+    const finish = runPipeline();
 
-    const finishAnimation = runPipelineAnimation();
+    const MIN_MS = 4800;
 
-    // Minimum display time so the animation is always fully visible.
-    // The fetch and the timer race in parallel; results only show once BOTH finish.
-    const MIN_DISPLAY_MS = 5000;
+    // Show a "taking longer" hint after 8s (can happen during Gemini rate-limit retry)
+    const slowTimer = setTimeout(() => {
+        const sub = document.getElementById('ps-generate')?.querySelector('.ps-sub');
+        if (sub) sub.textContent = 'Retrying… please wait';
+    }, 8000);
 
     try {
         const [response] = await Promise.all([
-            fetch('/search', {
+            fetch('/query', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query })
+                body: JSON.stringify({ query }),
             }),
-            delay(MIN_DISPLAY_MS)   // guarantees animation plays fully
+            delay(MIN_MS),
         ]);
 
+        clearTimeout(slowTimer);
         const data = await response.json();
 
-        // All steps snap to ✓ done, hold briefly, then hide
-        finishAnimation();
-        await delay(700);
-        loader.classList.add('hidden');
+        finish();
+        await delay(500);
 
-        displayLogic(data.queryInfo);
-
-        if (data.results && data.results.length > 0) {
-            displayResults(data.results);
+        if (!response.ok) {
+            showError(data.error || `Server error ${response.status}`);
         } else {
-            resultsDiv.innerHTML = '<p class="no-results">No recipes matched your hybrid criteria. Try adjusting your search.</p>';
+            renderResult(query, data);
         }
 
     } catch (err) {
+        finish();
+        showError('Could not reach the server. Is it running on port 3000?');
         console.error(err);
-        finishAnimation();
-        loader.classList.add('hidden');
-        resultsDiv.innerHTML = '<p class="error">Failed to connect to the backend server.</p>';
+    } finally {
+        sendBtn.disabled = false;
     }
 }
 
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+function showError(msg) {
+    document.getElementById('errorMsg').textContent = msg;
+    showOnly('errorState');
 }
 
-// ─── Display Helpers ─────────────────────────────────────────────────────────
-function displayLogic(info) {
-    if (!info) return;
-    queryLogic.classList.remove('hidden');
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-    // Exact string embedded and sent to Zilliz Cloud
-    semanticVal.textContent = `"${info.semantic}"`;
-
-    // Exact SQL filter conditions applied in Postgres
-    if (info.sqlQuery && info.sqlQuery !== 'None') {
-        filtersVal.textContent = info.sqlQuery;
-    } else {
-        filtersVal.textContent = 'None (no structured filters applied)';
-    }
-}
-
-function displayResults(recipes) {
-    recipes.forEach((recipe, i) => {
-        const card = document.createElement('div');
-        card.className = 'recipe-card';
-        card.style.animationDelay = `${i * 80}ms`;
-
-        const categories = Array.isArray(recipe.category) ? recipe.category : [];
-
-        card.innerHTML = `
-            <h3>${recipe.title}</h3>
-            <div class="badge-row">
-                <span class="badge cal">${recipe.calories} kcal</span>
-                <span class="badge time">${recipe.prep_time} mins</span>
-                ${categories.map(c => `<span class="badge cat">${c}</span>`).join('')}
-            </div>
-            <p>${recipe.description}</p>
-            <div class="ingredients">
-                <strong>Ingredients:</strong><br>
-                ${recipe.ingredients}
-            </div>
-        `;
-        resultsDiv.appendChild(card);
-    });
-}
-
+// ─── Suggestion helper ───────────────────────────────────────────────────────
 function setQuery(text) {
-    searchInput.value = text;
-    performSearch();
+    queryInput.value = text;
+    queryInput.style.height = 'auto';
+    queryInput.style.height = Math.min(queryInput.scrollHeight, 150) + 'px';
+    submitQuery();
 }
-
-searchBtn.addEventListener('click', performSearch);
-searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') performSearch();
-});
