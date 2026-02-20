@@ -174,13 +174,7 @@ async function submitQuery() {
     showOnly('loadingState');
     const finish = runPipeline();
 
-    const MIN_MS = 4800;
-
-    // Show a "taking longer" hint after 8s (can happen during Gemini rate-limit retry)
-    const slowTimer = setTimeout(() => {
-        const sub = document.getElementById('ps-generate')?.querySelector('.ps-sub');
-        if (sub) sub.textContent = 'Retrying… please wait';
-    }, 8000);
+    const MIN_MS = 3500; // slightly faster for Groq
 
     try {
         const [response] = await Promise.all([
@@ -192,7 +186,6 @@ async function submitQuery() {
             delay(MIN_MS),
         ]);
 
-        clearTimeout(slowTimer);
         const data = await response.json();
 
         finish();
